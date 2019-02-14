@@ -25,7 +25,7 @@ SRCS = main.cc Block.cc Disk.cc
 
 #
 # We choose the name of the executable to be created
-EXEC = Project_3
+EXEC = Project3_CS4348.001
 
 #
 # You normally don't need to change anything below here.
