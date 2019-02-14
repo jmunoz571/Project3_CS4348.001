@@ -91,6 +91,7 @@ int main(int argc, char *argv[])
 	  break;
         default: //Invalid option
 	  cout << "\n*Invalid Option*\n";
+	  opt = 8;
 	  break;
         }//end of switch
     }while(opt !=8);//if user inputs 8, break loop
