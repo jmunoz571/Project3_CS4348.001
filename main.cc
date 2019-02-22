@@ -16,6 +16,8 @@ Notes:
 #include "main.h"
 using namespace std;
 
+int printFile(FILE *);
+
 int main(int argc, char *argv[])
 {
     //Check if user input a file name
@@ -160,7 +162,28 @@ bool validOption(string input)
     return valid;
 }
 
-
+int printFile(FILE *dataFile)
+{
+if(dataFile)
+    {
+        while(!dataFile.eof()) //stop when the pointer reads the end of file bit
+        {
+            //read the current line and store it
+            getline(dataFile, line, '\n'); //store the first line of the file in a string
+            if(!line.empty())//if the string "is not empty"
+            {
+		    cout << line << "\n";                    
+		    numb++;
+            }//end if
+        }//end while loop
+    }
+    else //file did not open properly
+    {
+        cout << "Error - The file did not open\n"; //prints error message
+	exit(0);
+    }
+    dataFile.clear(); //clear the EOF bit
+}
 
 //disk has two methods, diks can only read an entire block or write an entire block, is an unintelliget device
 //minimal design - 3 objects
