@@ -14,6 +14,7 @@ Notes:
 #include <iomanip>
 #include <cstdlib>
 #include "main.h"
+#include "Disk.h"
 using namespace std;
 
 void printFile(fstream &);
@@ -28,8 +29,6 @@ int main(int argc, char *argv[])
     //variables
     fstream dataFile; //to read from the file
     //ofstream outPutFile; //to write into a file
-    string line = "";//temporarily stores a numeral
-    int numb = 0;//temporarily stores a numeral
     //char chr;
 	//convert c string to string
     //string fName(argv[1]);
@@ -37,29 +36,8 @@ int main(int argc, char *argv[])
     //Open the files
     dataFile.open(argv[1]);
     //outPutFile.open("answers.txt");
-
-    //check to see if file opened correctly
-    if(dataFile)
-    {
-        while(!dataFile.eof()) //stop when the pointer reads the end of file bit
-        {
-            //read the current line and store it
-            getline( dataFile, line, '\n' ); //store the first line of the file in a string
-
-            if(!line.empty())//if the string "is not empty"
-            {
-		    cout << line << "\n";                    
-		    numb++;
-            }//end if
-        }//end while loop
-    }
-    else //file did not open properly
-    {
-        cout << "Error - The file did not open\n"; //prints error message
-	exit(0);
-    }
-    dataFile.clear(); //clear the EOF bit
-
+    Disk disk; 
+    disk.printData();
 
 //--USER Menu--------------------------------------------------------------------------------------------------
 
