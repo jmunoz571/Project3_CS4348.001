@@ -18,18 +18,32 @@ using namespace std;
 class Disk{
  //Attributes
  private:
-  int  length;
-  int *blocks; 
+  int  blocks;
+  int  block_size;
+  char *data; 
 
  public:
   //Default Constructor
   Disk(){
-    length = 256;
+    blocks = 256;
+    block_size = 512;
     //Disk storage = array of 256 blocks of size 512 bytes
-    blocks = new int[length];
+    data = new char[blocks * block_size];
+    //initialize the data array 
+    for(int i = 0; i < blocks * block_size; i++){
+      block[i] = '0';
+    }
   }
   //Overloaded Constructors
-  
+  void printData(){
+    for(int i = 0; i < blocks; i++){
+	cout << i << endl;
+	for(int j = 0; j < block_size; j++){    
+       	cout << data[i][j];	
+	}
+    }
+
+  } 
   //Methods
   int read(int block)
   {
