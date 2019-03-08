@@ -18,6 +18,7 @@ Notes:
 using namespace std;
 
 void printFile(fstream &);
+char** getFileData(FILE* , int* );
 
 int main(int argc, char *argv[])
 {
@@ -29,10 +30,12 @@ int main(int argc, char *argv[])
     //variables
     //fstream dataFile; //to read from the file
     //ofstream outPutFile; //to write into a file
+    
     //char chr;
 	//convert c string to string
     //string fName(argv[1]);
-
+    FILE *dataFile;
+    dataFile = fopen(argv[1], "r");
     //Open the files
     //dataFile.open(argv[1]);
     //outPutFile.open("answers.txt");
@@ -44,7 +47,18 @@ int main(int argc, char *argv[])
     }
     disk.write(3, tempBlock);
     disk.printBitmap();
- 
+    int y = 10;
+    char **x = getFileData(dataFile, &y);
+	//test
+    for(int i = 0; i < y; i++){
+    for(int j = 0; j < 512; j++){
+          cout << x[i][j];
+       }
+       cout << "----------end of file -------"<<endl;
+    }
+   
+
+
     //new variables
     int opt = 0; //store the user's choice of the main menu
     string option = "";//store the user's choice of the main menu in a string in order to validate it
@@ -89,6 +103,7 @@ int main(int argc, char *argv[])
     //close the all files 
     //dataFile.close();
     //outPutFile.close();
+    fclose(dataFile);
     return 0;
 }
 
@@ -174,7 +189,7 @@ if(dataFile)
 
 //given a file pointer and an integer, it copies the contents of the file upto 10 blocks
 // and assigns the number of blocks to the integer given. 
-char** getFileData(FILE* file, int size){
+char** getFileData(FILE* file, int *size){
     char **blocks = new char*[10];
     rewind(file); //reset file pointer
     //initialize the array with spaces
@@ -203,7 +218,7 @@ char** getFileData(FILE* file, int size){
           for(int j = 0; j < 512; j++){
               temp[i][j] = blocks[i][j];
           }
-          size = s;//update the number of blocks, by default is 10
+          *size = s;//update the number of blocks, by default is 10
           return temp; //return the shorter block array
        } 
     }
