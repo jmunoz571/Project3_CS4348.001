@@ -50,5 +50,9 @@ class Block{
       cout << endl;
     }
   }
-
+  void printFileAllocTable(){
+    printf("FileName\t\tStartBlock\tLenght\n");
+    for(int i = 0; i < 10; i++){
+	cout << endl;
+    }
 }; 
