@@ -27,14 +27,14 @@ int main(int argc, char *argv[])
         exit(0);
     }
     //variables
-    fstream dataFile; //to read from the file
+    //fstream dataFile; //to read from the file
     //ofstream outPutFile; //to write into a file
     //char chr;
 	//convert c string to string
     //string fName(argv[1]);
 
     //Open the files
-    dataFile.open(argv[1]);
+    //dataFile.open(argv[1]);
     //outPutFile.open("answers.txt");
     Disk disk; 
 //--USER Menu--------------------------------------------------------------------------------------------------
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
         }//end of switch
     }while(opt !=8);//if user inputs 8, break loop
     //close the all files 
-    dataFile.close();
+    //dataFile.close();
     //outPutFile.close();
     return 0;
 }
@@ -171,6 +171,47 @@ if(dataFile)
     }
     dataFile.clear(); //clear the EOF bit
 }
+
+//given a file pointer and an integer, it copies the contents of the file upto 10 blocks
+// and assigns the number of blocks to the integer given. 
+char** getFileData(FILE* file, int size){
+    char **blocks = new char*[10];
+    rewind(file); //reset file pointer
+    //initialize the array with spaces
+    for(int i = 0; i < 10; i++){
+       blocks[i] = new char[512];
+       for(int j = 0; j < 512; j++){
+          blocks[i][j] = ' ';
+       }
+    }
+    //copy file contents to the array
+    int s = 0;
+    for( ; s < 10; s++){
+       for(int j = 0; j < 512; j++){
+    	 if(feof(file)){ //while not end of file, store the current char
+	    break;
+	 }
+         blocks[s][j] = getc(file);
+       }
+    }
+    if( s != 10)//if the file did not fill all 10 blocks
+    {
+    	//create a new shorter array and return it 
+	char ** temp = new char*[s+1];
+	for(int i = 0; i <= s; i++){
+	  temp[i] = new char[512]; 
+          for(int j = 0; j < 512; j++){
+              temp[i][j] = blocks[i][j];
+          }
+          size = s;//update the number of blocks, by default is 10
+          return temp; //return the shorter block array
+       } 
+    }
+
+    rewind(file); //rewind the file pointer
+    return blocks;//return the array with 10 blocks
+}
+
 
 //disk has two methods, diks can only read an entire block or write an entire block, is an unintelliget device
 //minimal design - 3 objects
