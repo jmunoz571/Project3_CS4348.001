@@ -38,31 +38,40 @@ int main(int argc, char *argv[])
     //outPutFile.open("answers.txt");
     Disk disk; 
 //--USER Menu--------------------------------------------------------------------------------------------------
-
+    char tempBlock[512];
+    for(int i = 0; i < 512; i++){
+    	tempBlock[i] = 'A';
+    }
+    disk.write(3, tempBlock);
+    disk.printBitmap();
+ 
     //new variables
     int opt = 0; //store the user's choice of the main menu
     string option = "";//store the user's choice of the main menu in a string in order to validate it
     //    char result;//store the of weather the input is a valid Roman/Arabic numeral or none
+    int numb = 0;
     do
     {
         displayMenu(); //display user interface
         cin >>opt; //get input from user
         cin.ignore(10, '\n');
         //number from user = case
+	cout << "Choice: " << opt << endl;
         switch(opt)
         {
         case 1: //Option 1) Display a file
           break;
         case 2: //Option 2) Display a file table
-	  cout << "Choice: " << opt << endl;
 	  disk.printFileAllocTable();
 	  break;
         case 3: //Option 3) Display the free space bitmap
-	  cout << "Choice: " << opt << endl;
     	  disk.printBitmap();
           break;
         case 4: //Option 4) Display a disk block
-          break;
+	  cout << "Enter Block Number: " << endl;
+	  cin >> numb;
+	  disk.displayBlock(numb);
+	  break;
         case 5: //Option 5) Copy a file from the simulation to a file on the real system
           break;
 	case 6: //Option 6) Copy a file from the real system to a file in the simulation
@@ -77,8 +86,7 @@ int main(int argc, char *argv[])
 	  break;
         }//end of switch
     }while(opt !=8);//if user inputs 8, break loop
-
-    //close the all files
+    //close the all files 
     dataFile.close();
     //outPutFile.close();
     return 0;
@@ -169,4 +177,14 @@ if(dataFile)
 //UI
 //takes input and talks to diks
 //Disk
-//19641 - scantron
+//19641 - scantro
+//
+/*cout << numb << endl;
+	  for(int i = 0; i < 512; i++){
+	     if(i%32 == 0 && i != 0)
+	  	cout << endl;
+    	     cout << tempBlock1[i];
+	  }
+	  cout << endl;
+
+*/
