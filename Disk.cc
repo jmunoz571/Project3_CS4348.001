@@ -18,28 +18,30 @@ using namespace std;
 class Disk{
  //Attributes
  private:
-  int  blocks;
+  int  block;
   int  block_size;
-  char *data; 
+  char data[256][512]; 
 
  public:
   //Default Constructor
   Disk(){
-    blocks = 256;
+    block = 256;
     block_size = 512;
-    //Disk storage = array of 256 blocks of size 512 bytes
-    data = new char[blocks * block_size];
+    //Disk storage = array of 256 block of size 512 bytes
+    //data = new char[block][block_size];
     //initialize the data array 
-    for(int i = 0; i < blocks * block_size; i++){
-      block[i] = '0';
+    for(int i = 0; i < block; i++){
+    	for(int j = 0; j < block_size; j++){
+      	  data[i][j] = '0';
+      }
     }
   }
   //Overloaded Constructors
   void printData(){
-    for(int i = 0; i < blocks; i++){
+    for(int i = 0; i < block; i++){
 	cout << i << endl;
 	for(int j = 0; j < block_size; j++){    
-       	cout << data[i][j];	
+       	  cout << data[i][j];	
 	}
     }
 
@@ -50,12 +52,12 @@ class Disk{
     if(block < 0 || block > 256)
        return  -1;
     else 
-      return blocks[block];
+      return 1;
   }
 
   void write(int index, int block)
   {
-    blocks[index] = block;
+    //data[index] = block;
   }
 
 };

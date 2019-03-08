@@ -8,8 +8,8 @@
 
 # Set up info for C++ implicit rule
 CXX = g++
-CXXFLAGS = -Wall 
-CPPFLAGS = 
+CXXFLAGS = 
+CPPFLAGS = -Wall 
 #
 # Set up any Linker Flags
 LDFLAGS = 

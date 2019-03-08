@@ -16,7 +16,7 @@ Notes:
 #include "main.h"
 using namespace std;
 
-int printFile(FILE *);
+void printFile(fstream &);
 
 int main(int argc, char *argv[])
 {
@@ -28,8 +28,7 @@ int main(int argc, char *argv[])
     //variables
     fstream dataFile; //to read from the file
     //ofstream outPutFile; //to write into a file
-    string line = ""; //used to temporarily store a string
-    string numeral = "";//temporarily stores a numeral
+    string line = "";//temporarily stores a numeral
     int numb = 0;//temporarily stores a numeral
     //char chr;
 	//convert c string to string
@@ -45,7 +44,8 @@ int main(int argc, char *argv[])
         while(!dataFile.eof()) //stop when the pointer reads the end of file bit
         {
             //read the current line and store it
-            getline(dataFile, line, '\n'); //store the first line of the file in a string
+            getline( dataFile, line, '\n' ); //store the first line of the file in a string
+
             if(!line.empty())//if the string "is not empty"
             {
 		    cout << line << "\n";                    
@@ -162,8 +162,11 @@ bool validOption(string input)
     return valid;
 }
 
-int printFile(FILE *dataFile)
+void printFile(fstream &dataFile)
 {
+string line = "";//temporarily stores a numeral
+int numb = 0;//temporarily stores a numeral
+ 
 if(dataFile)
     {
         while(!dataFile.eof()) //stop when the pointer reads the end of file bit
