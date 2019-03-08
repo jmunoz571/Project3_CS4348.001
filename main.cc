@@ -37,8 +37,6 @@ int main(int argc, char *argv[])
     dataFile.open(argv[1]);
     //outPutFile.open("answers.txt");
     Disk disk; 
-    disk.printData();
-
 //--USER Menu--------------------------------------------------------------------------------------------------
 
     //new variables
@@ -56,8 +54,12 @@ int main(int argc, char *argv[])
         case 1: //Option 1) Display a file
           break;
         case 2: //Option 2) Display a file table
-          break;
+	  cout << "Choice: " << opt << endl;
+	  disk.printFileAllocTable();
+	  break;
         case 3: //Option 3) Display the free space bitmap
+	  cout << "Choice: " << opt << endl;
+    	  disk.printBitmap();
           break;
         case 4: //Option 4) Display a disk block
           break;
@@ -79,10 +81,6 @@ int main(int argc, char *argv[])
     //close the all files
     dataFile.close();
     //outPutFile.close();
-    char c;
-    cout << "Enter Char: \n";
-    cin >> c;
-    printf("Your Char is: %d - %c \n",c, c);
     return 0;
 }
 
