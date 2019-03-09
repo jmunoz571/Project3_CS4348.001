@@ -49,14 +49,17 @@ int main(int argc, char *argv[])
     disk.printBitmap();
     int y = 10;
     char **x = getFileData(dataFile, &y);
-	//test
+    //test
+    cout << "main y = " << y << endl;
+    cout << "-------------------------Start of File-------------------------"<<endl;
     for(int i = 0; i < y; i++){
-    for(int j = 0; j < 512; j++){
+       for(int j = 0; j < 512; j++){
+	  if( (int)x[i][j] == -1)//if this is the end of file character, stop 
+	     break;
           cout << x[i][j];
        }
-       cout << "----------end of file -------"<<endl;
     }
-   
+    cout << "---------------------------End of File-------------------------"<<endl;
 
 
     //new variables
@@ -196,19 +199,25 @@ char** getFileData(FILE* file, int *size){
     for(int i = 0; i < 10; i++){
        blocks[i] = new char[512];
        for(int j = 0; j < 512; j++){
-          blocks[i][j] = ' ';
+          blocks[i][j] = '_';
        }
     }
     //copy file contents to the array
     int s = 0;
+    bool exit = false;
     for( ; s < 10; s++){
        for(int j = 0; j < 512; j++){
     	 if(feof(file)){ //while not end of file, store the current char
+	    s++;
+	    exit = true;
 	    break;
 	 }
          blocks[s][j] = getc(file);
        }
+       if(exit)
+       	break;
     }
+    cout << "method s = " << s << endl;
     if( s != 10)//if the file did not fill all 10 blocks
     {
     	//create a new shorter array and return it 
