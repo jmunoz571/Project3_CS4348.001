@@ -12,6 +12,7 @@ Notes:
 #include <string>
 #include <cctype>
 #include <iomanip>
+#include <cstring>
 #include <cstdlib>
 #include "main.h"
 #include "Disk.h"
@@ -48,25 +49,15 @@ int main(int argc, char *argv[])
     disk.write(3, tempBlock);
     disk.printBitmap();
     int y = 10;
-    char **x = getFileData(dataFile, &y);
-    //test
-    cout << "main y = " << y << endl;
-    cout << "-------------------------Start of File-------------------------"<<endl;
-    for(int i = 0; i < y; i++){
-       for(int j = 0; j < 512; j++){
-	  if( (int)x[i][j] == -1)//if this is the end of file character, stop 
-	     break;
-          cout << x[i][j];
-       }
-    }
-    cout << "---------------------------End of File-------------------------"<<endl;
-
-
+    char **inputFileData; 
     //new variables
     int opt = 0; //store the user's choice of the main menu
     string option = "";//store the user's choice of the main menu in a string in order to validate it
     //    char result;//store the of weather the input is a valid Roman/Arabic numeral or none
     int numb = 0;
+    //temporarily file variables
+    FILE *inputFile;
+    string fileName = ""; 
     do
     {
         displayMenu(); //display user interface
@@ -77,6 +68,29 @@ int main(int argc, char *argv[])
         switch(opt)
         {
         case 1: //Option 1) Display a file
+	  //check wether file alllocation table is empty
+
+	  //if empty, display a file given by the user
+	  //ask for file name
+	  cout << "Enter File Name: "<< endl; 
+	  getline(cin, fileName, '\n'); 
+	  //get file name 
+	  cout << "file Name: " << fileName << endl;
+	  //pass in file name and open file 
+    	  inputFile = fopen(fileName.c_str(), "r");
+	  //read file and store it in an array
+          inputFileData = getFileData(inputFile, &y);
+          cout << "option 1: y = " << y << endl;
+	  //display file
+          cout << "-------------------------Start of File-------------------------"<<endl;
+          for(int i = 0; i < y; i++){
+             for(int j = 0; j < 512; j++){
+	        if( (int)inputFileData[i][j] == -1)//if this is the end of file character, stop 
+	           break;
+                cout <<  inputFileData[i][j];
+             }
+          }
+          cout << "---------------------------End of File-------------------------"<<endl;
           break;
         case 2: //Option 2) Display a file table
 	  disk.printFileAllocTable();
@@ -106,6 +120,7 @@ int main(int argc, char *argv[])
     //close the all files 
     //dataFile.close();
     //outPutFile.close();
+    fclose(inputFile);
     fclose(dataFile);
     return 0;
 }
