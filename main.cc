@@ -20,9 +20,10 @@ Notes:
 using namespace std;
 
 void printFile(fstream &);
-Block* fileFromSystemToDisk(FILE* , int* );
+Block* fileFromSystemToDisk(FILE* , int*, int );
 void storeFileInDisk(Block*, char ,  string , Disk &, int );
 int findNextFreeBlock(Disk &, int& , char );
+char getRandomFreeBlock(Disk &); 
 
 int main(int argc, char *argv[])
 {
@@ -64,11 +65,12 @@ int main(int argc, char *argv[])
     Block b;
     for(int i = 0; i < 256; i++){
     b.putcAt(i, 'X');
+
 }
     disk.write(5, &b);   
-
+    
     //display mode
-    cout << "Mode: " << modes[mode] << endl;
+    cout << "Mode: " << modes[mode-1] << endl;
 //--USER Menu--------------------------------------------------------------------------------------------------
     do
     {
@@ -96,7 +98,7 @@ int main(int argc, char *argv[])
 		break;
 	  }
 	  //read file and store it in an array
-          inputFileData = fileFromSystemToDisk(inputFile, &fileSize);
+          inputFileData = fileFromSystemToDisk(inputFile, &fileSize, mode);
 	  //display file
           cout << "-------------------------Start of File-------------------------"<<endl;
           for(int i = 0; i <fileSize; i++){
@@ -134,7 +136,7 @@ int main(int argc, char *argv[])
 	     break;
 	  }
 	  //read file and store it in temp block an array
-          inputFileData = fileFromSystemToDisk(inputFile, &fileSize);
+          inputFileData = fileFromSystemToDisk(inputFile, &fileSize, mode);
 
 	  cout << "File Name: " << fileName << endl;
 	  //store the array of blocks on the disk 
@@ -242,7 +244,7 @@ if(dataFile)
 
 //given a file pointer and an integer, it copies the contents of the file upto 10 blocks
 // and assigns the number of blocks to the integer given. 
-Block* fileFromSystemToDisk(FILE* file, int *size){
+Block* fileFromSystemToDisk(FILE* file, int *size, int mode){
     //initialize the array with spaces
     Block* blocks = new Block[10];
     rewind(file); //reset file pointer
@@ -251,15 +253,17 @@ Block* fileFromSystemToDisk(FILE* file, int *size){
     bool exit = false;
     for( ; s < 10; s++){
        for(int j = 0; j < 512; j++){
+         //if this is a in chained mode, skip the last byte
     	 if(feof(file)){ //while not end of file, store the current char
 	    s++;
 	    exit = true;
 	    break;
 	 }
-         blocks[s].putcAt(j , getc(file));
+         if(mode != 2 && j != 510)
+            blocks[s].putcAt(j , getc(file));
        }
        if(exit)
-       	break;
+          break;
     }
     cout << "method s = " << s << endl;
     if( s != 10)//if the file did not fill all 10 blocks
@@ -292,11 +296,12 @@ void storeFileInDisk(Block *fileBlocks, char fileSize,  string fileName, Disk  &
      //find the first free block
      
      int totalFreeBlocks = 0;
+     unsigned char nearestFreeBlock = 0;
      //if mode == continious
      if(mode == 1)
      {
 	//find a continious set of free blocks 
-        int nearestFreeBlock = findNextFreeBlock( disk, totalFreeBlocks,  fileSize);
+        nearestFreeBlock = findNextFreeBlock( disk, totalFreeBlocks,  fileSize);
 	cout << "total free blocks - outside: " << totalFreeBlocks << endl;
         if( totalFreeBlocks < (int)fileSize){
            cout << "Error - Not Enough Free Space in the Disk." << endl;
@@ -315,7 +320,58 @@ void storeFileInDisk(Block *fileBlocks, char fileSize,  string fileName, Disk  &
         } 
      }else{//the mode is either chained or indexed
         //get a random starting block
+        nearestFreeBlock = getRandomFreeBlock(disk); 
+        if(mode == 2) //mode is chained 
+        { 
+           //store the starting block of the file
+           disk.getBlock(0)->putcAt( (int) lengthIndex -1, (unsigned char) nearestFreeBlock);
+	   unsigned char nextBlockAddress; 
+           //loop to store all the blocks 
+	   for( int i = 0; i < (int) fileSize; i++){
+              //update the bitmap
+              disk.updateBitmap(nearestFreeBlock, '1');
+              //get the address of the next block
+              nextBlockAddress =(char) getRandomFreeBlock(disk);// get the new address
+              //store the address of the next block in the current block
+              fileBlocks[i].putcAt(510, nextBlockAddress);
+	      //store the block in the disk
+	      disk.write(nearestFreeBlock, &fileBlocks[i]);
+              //update the current address with the next address
+              nearestFreeBlock = nextBlockAddress;
+           }
 
+        }
+        else{ //mode is indexed
+        //pick a random starting block to store the addresses of all the blocks
+        nearestFreeBlock = getRandomFreeBlock(disk); 
+	unsigned char nextBlockAddress; 
+        //save the address of the directory block
+        int addressBlock = nearestFreeBlock; 
+        //get a new address for the first block of the file
+        nearestFreeBlock = getRandomFreeBlock(disk); 
+        //create a new block for the index table is the size of the file is less than 9 blocks
+        Block* directoryBlock = new Block();
+        //add it to the file allocation table, along with its size
+        if((int) fileSize < 10 && (int) fileSize > 0)
+           (int) fileSize++;
+        for( int i =  0; i < (int) fileSize; i++){
+           //update bitmap
+           disk.updateBitmap(nearestFreeBlock, '1');
+           //get the address for the next block
+           nextBlockAddress =(char) getRandomFreeBlock(disk);// get the new address
+           //put the address of the current block on the directoryBlock
+           directoryBlock->putcAt(i, nearestFreeBlock);
+           //store the block in the disk  
+	   disk.write(nearestFreeBlock, &fileBlocks[i]);
+           //update the current address with the new address
+           nearestFreeBlock = nextBlockAddress;
+        }	
+        //all the adresses have been store in the directory block, now store the directory block
+        disk.write(addressBlock, directoryBlock);
+        //store the starting block in the allocation table
+        disk.getBlock(0)->putcAt( (int) lengthIndex -1, (unsigned char) addressBlock);
+
+       } 
 
      }
      //store the file length at the allocation table 
@@ -373,6 +429,20 @@ void storeFileChained(Disk &disk, Block* fileBlocks, char fileSize){
 
 void storeFileIndexed(Disk &disk, Block* fileBlocks, char fileSize){
 }
+//generates a random number b/w 2 and 256, the checks the bitmap to see if that block is empty
+char getRandomFreeBlock(Disk &disk ){
+   int numb = 2;
+   int min = 2;
+   int maximum = 256;
+   for( int i = 0; i < 10; i++){
+     numb = (rand() % (maximum + 1 - min)) + min;
+     if(disk.getBlock(1)->getcAt(numb) == '0' && i == 4){
+        cout << "numb: " << numb << " i= " << i << endl;
+	break;
+      }
+   }
+   return numb;	
+}
 
 
 //disk has two methods, diks can only read an entire block or write an entire block, is an unintelliget device
@@ -380,14 +450,4 @@ void storeFileIndexed(Disk &disk, Block* fileBlocks, char fileSize){
 //UI
 //takes input and talks to diks
 //Disk
-//19641 - scantro
 //
-/*cout << numb << endl;
-	  for(int i = 0; i < 512; i++){
-	     if(i%32 == 0 && i != 0)
-	  	cout << endl;
-    	     cout << tempBlock1[i];
-	  }
-	  cout << endl;
-
-*/
