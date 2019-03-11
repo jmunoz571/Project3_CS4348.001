@@ -16,6 +16,7 @@ Notes:
 #include <cstdlib>
 #include "main.h"
 #include "Disk.h"
+#include "Block.h"
 using namespace std;
 
 void printFile(fstream &);
@@ -47,7 +48,7 @@ int main(int argc, char *argv[])
     	tempBlock[i] = 'A';
     }
     disk.write(3, tempBlock);
-    disk.printBitmap();
+    //disk.printBitmap();
     int y = 10;
     char **inputFileData; 
     //new variables
@@ -91,6 +92,7 @@ int main(int argc, char *argv[])
              }
           }
           cout << "---------------------------End of File-------------------------"<<endl;
+          fclose(inputFile);
           break;
         case 2: //Option 2) Display a file table
 	  disk.printFileAllocTable();
@@ -120,8 +122,19 @@ int main(int argc, char *argv[])
     //close the all files 
     //dataFile.close();
     //outPutFile.close();
-    fclose(inputFile);
     fclose(dataFile);
+    Block tmp;
+    //tmp.display();
+    for(int i = 0; i < 256; i++){
+    	tmp.putcAt(i, 'A');
+    }
+    //tmp.display();
+
+    Block tmp2;
+    tmp2.write(&tmp);
+    Block *x;
+    x = tmp2.read();
+    x->display();
     return 0;
 }
 
