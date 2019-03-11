@@ -20,37 +20,38 @@ Notes:
 using namespace std;
 
 void printFile(fstream &);
-char** getFileData(FILE* , int* );
+Block* fileFromSystemToDisk(FILE* , int* );
+void storeFileInDisk(Block*, char ,  string , Disk &, int );
+int findNextFreeBlock(Disk &, int& , char );
 
 int main(int argc, char *argv[])
 {
     //Check if user input a file name
     if( argc < 2){
-        cout << "Error - Please Enter A File Name. " << endl;
+        cout << "Error - Please Enter An Allocatin Mode. " << endl;
         exit(0);
+    }
+    int mode = -1;
+    mode = strcmp(argv[1], "contiguous") == 0? 1: mode;
+    mode = strcmp(argv[1], "chained"   ) == 0? 2: mode;
+    mode = strcmp(argv[1], "indexed"   ) == 0? 3: mode;
+    if(mode == -1){
+       cout << "Make sure spelling is corret - contiguous, chained or indexed."; 
+       return 0;
     }
     //variables
     //fstream dataFile; //to read from the file
     //ofstream outPutFile; //to write into a file
-    
-    //char chr;
-	//convert c string to string
+    string modes[] = {"contiguous", "chained", "indexed"}; 
     //string fName(argv[1]);
-    FILE *dataFile;
-    dataFile = fopen(argv[1], "r");
+    //FILE *dataFile;
+    //dataFile = fopen(argv[1], "r");
     //Open the files
     //dataFile.open(argv[1]);
     //outPutFile.open("answers.txt");
-    Disk disk; 
-//--USER Menu--------------------------------------------------------------------------------------------------
-    char tempBlock[512];
-    for(int i = 0; i < 512; i++){
-    	tempBlock[i] = 'A';
-    }
-    disk.write(3, tempBlock);
-    //disk.printBitmap();
-    int y = 10;
-    char **inputFileData; 
+    Disk disk;
+    int fileSize = 10;
+    Block *inputFileData; 
     //new variables
     int opt = 0; //store the user's choice of the main menu
     string option = "";//store the user's choice of the main menu in a string in order to validate it
@@ -59,6 +60,9 @@ int main(int argc, char *argv[])
     //temporarily file variables
     FILE *inputFile;
     string fileName = ""; 
+    //display mode
+    cout << "Mode: " << modes[mode] << endl;
+//--USER Menu--------------------------------------------------------------------------------------------------
     do
     {
         displayMenu(); //display user interface
@@ -79,26 +83,30 @@ int main(int argc, char *argv[])
 	  cout << "file Name: " << fileName << endl;
 	  //pass in file name and open file 
     	  inputFile = fopen(fileName.c_str(), "r");
+	  //check if file opened correctly
+	  if(!inputFile){
+		cout << "Error - File did not open correctly" << endl;
+		break;
+	  }
 	  //read file and store it in an array
-          inputFileData = getFileData(inputFile, &y);
-          cout << "option 1: y = " << y << endl;
+          inputFileData = fileFromSystemToDisk(inputFile, &fileSize);
 	  //display file
           cout << "-------------------------Start of File-------------------------"<<endl;
-          for(int i = 0; i < y; i++){
+          for(int i = 0; i <fileSize; i++){
              for(int j = 0; j < 512; j++){
-	        if( (int)inputFileData[i][j] == -1)//if this is the end of file character, stop 
+	        if( (int)inputFileData[i].getcAt(j) == -1)//if this is the end of file character, stop 
 	           break;
-                cout <<  inputFileData[i][j];
+                cout <<  inputFileData[i].getcAt(j);
              }
           }
           cout << "---------------------------End of File-------------------------"<<endl;
           fclose(inputFile);
           break;
         case 2: //Option 2) Display a file table
-	  disk.printFileAllocTable();
+	  disk.displayFileAllocTable();
 	  break;
         case 3: //Option 3) Display the free space bitmap
-    	  disk.printBitmap();
+	  disk.displayBitmap();
           break;
         case 4: //Option 4) Display a disk block
 	  cout << "Enter Block Number: " << endl;
@@ -108,6 +116,24 @@ int main(int argc, char *argv[])
         case 5: //Option 5) Copy a file from the simulation to a file on the real system
           break;
 	case 6: //Option 6) Copy a file from the real system to a file in the simulation
+          //ask for file name
+	  cout << "Enter File Name: "<< endl; 
+	  getline(cin, fileName, '\n'); 
+	  //open the file  
+    	  inputFile = fopen(fileName.c_str(), "r");
+	  //check if file opened correctly
+          if(!inputFile){
+	     cout << "Error - File did not open correctly" << endl;
+	     break;
+	  }
+	  //read file and store it in temp block an array
+          inputFileData = fileFromSystemToDisk(inputFile, &fileSize);
+
+	  cout << "File Name: " << fileName << endl;
+	  //store the array of blocks on the disk 
+          storeFileInDisk( inputFileData, (char)fileSize,  fileName, disk, mode );
+	  cout << "File Sucessfully Copied" << endl;
+          fclose(inputFile);
 	  break;
 	case 7: //Option 7) Delete a file
 	  break;
@@ -122,19 +148,8 @@ int main(int argc, char *argv[])
     //close the all files 
     //dataFile.close();
     //outPutFile.close();
-    fclose(dataFile);
-    Block tmp;
-    //tmp.display();
-    for(int i = 0; i < 256; i++){
-    	tmp.putcAt(i, 'A');
-    }
-    //tmp.display();
+    //fclose(dataFile);
 
-    Block tmp2;
-    tmp2.write(&tmp);
-    Block *x;
-    x = tmp2.read();
-    x->display();
     return 0;
 }
 
@@ -220,16 +235,10 @@ if(dataFile)
 
 //given a file pointer and an integer, it copies the contents of the file upto 10 blocks
 // and assigns the number of blocks to the integer given. 
-char** getFileData(FILE* file, int *size){
-    char **blocks = new char*[10];
-    rewind(file); //reset file pointer
+Block* fileFromSystemToDisk(FILE* file, int *size){
     //initialize the array with spaces
-    for(int i = 0; i < 10; i++){
-       blocks[i] = new char[512];
-       for(int j = 0; j < 512; j++){
-          blocks[i][j] = '_';
-       }
-    }
+    Block* blocks = new Block[10];
+    rewind(file); //reset file pointer
     //copy file contents to the array
     int s = 0;
     bool exit = false;
@@ -240,7 +249,7 @@ char** getFileData(FILE* file, int *size){
 	    exit = true;
 	    break;
 	 }
-         blocks[s][j] = getc(file);
+         blocks[s].putcAt(j , getc(file));
        }
        if(exit)
        	break;
@@ -249,19 +258,109 @@ char** getFileData(FILE* file, int *size){
     if( s != 10)//if the file did not fill all 10 blocks
     {
     	//create a new shorter array and return it 
-	char ** temp = new char*[s+1];
+	Block* temp = new Block[s+1];
 	for(int i = 0; i <= s; i++){
-	  temp[i] = new char[512]; 
-          for(int j = 0; j < 512; j++){
-              temp[i][j] = blocks[i][j];
+           temp[i].writeBlock(&blocks[i]);
           }
           *size = s;//update the number of blocks, by default is 10
           return temp; //return the shorter block array
-       } 
-    }
-
+    } 
     rewind(file); //rewind the file pointer
     return blocks;//return the array with 10 blocks
+}
+
+   //Given a file, split the file and store in the disk in a contigious mode
+void storeFileInDisk(Block *fileBlocks, char fileSize,  string fileName, Disk  &disk, int mode){
+     //insert file name into the fileallocation table
+     char lengthIndex= 19; //the file length char is located at the 10th place of the disk allocation table
+     do{
+        if( disk.getBlock(0)->getcAt( (int)lengthIndex ) == '0')
+	   break; 
+	lengthIndex+= 20;//move down a row to check next file length	 
+     }while(lengthIndex < 500);
+     if( lengthIndex > 500){
+     	cout << "Error - File Allocation Table is Full. " << endl;
+	return;
+     }
+     //find the first free block
+     
+     int totalFreeBlocks = 0;
+     //if mode == continious
+     if(mode == 1)
+     {
+	//find a continious set of free blocks 
+        int nearestFreeBlock = findNextFreeBlock( disk, totalFreeBlocks,  fileSize);
+	cout << "total free blocks - outside: " << totalFreeBlocks << endl;
+        if( totalFreeBlocks < (int)fileSize){
+           cout << "Error - Not Enough Free Space in the Disk." << endl;
+	   return;
+        } 
+        //Store the starting block of the file. 
+        disk.getBlock(0)->putcAt( (int) lengthIndex -1, (char)  nearestFreeBlock);  
+        //store each block continiously
+        for(int i = 0; i < (int) fileSize; i++){
+	   //write block to disk
+     	   disk.write(nearestFreeBlock, &fileBlocks[i]);
+           //update bitmap
+	   disk.updateBitmap(nearestFreeBlock, '1');
+           //increase the nearestfreeblock counter to store the file contigiously
+	   nearestFreeBlock++;
+        } 
+     }else{//the mode is either chained or indexed
+        //get a random starting block
+
+
+     }
+     //store the file length at the allocation table 
+     disk.getBlock(0)->putcAt( (int) lengthIndex, fileSize);
+     lengthIndex -= 19;//reset the index to the beginig of the row to store the file name
+     int s = fileName.length();//get the number of chars in the string    
+     char c;
+     for(int i = 0; i < 18; i++){ //18 iterations = max number of chars per file name
+        c = s > i?(fileName.at(i)):' '; //if the string is less than 18, store spaces until end of loop
+        disk.getBlock(0)->putcAt( (int)lengthIndex + i, c);//store the current char
+     }
+     return; 
+} 
+
+void fileFromDiskToSystem(Block *fileBlocks, char fileSize,  string fileName, Disk  &disk){
+}
+
+
+int findNextFreeBlock(Disk &disk, int &totalFreeBlocks, char fileSize){
+   //look at the bitmap block 
+   char c; 
+   bool flag = true;
+   //used to return 1.- the closest free block set that matches the given size, 2.- the beggining of the largest set of free blocks, 3.- its size
+   int closest = 0;
+   //traverse top-down the bitmap to find the nearest free block 
+   for(int i = 0; i < 256; i++){
+      c = disk.getBlock(1)->getcAt(i);
+      if( c == '0')
+      {
+        totalFreeBlocks+= 1; 
+	closest = i; //starting point
+	 for(int j = i + 1; j < (fileSize + i); j++)
+         { 
+            c = disk.getBlock(1)->getcAt(j);
+            flag = (c == '1')?false:flag;  
+         }
+     	 if(flag)
+	   return closest;
+      }
+      flag = true;
+   }
+   return -1; //if main loop ends, then there is not a continious set large enough in the disk
+}
+
+
+void storeFileContigious(Disk &disk, Block* fileBlocks, char fileSize){
+}
+
+void storeFileChained(Disk &disk, Block* fileBlocks, char fileSize){
+} 
+
+void storeFileIndexed(Disk &disk, Block* fileBlocks, char fileSize){
 }
 
 

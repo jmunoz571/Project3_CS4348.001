@@ -7,108 +7,99 @@
 //File:         Disk.h
 //Notes:
 --------------------------------------------------------------*/
-#ifndef DISK_HH
-#define DISK_HH
+#ifndef DISK_H
+#define DISK_H
 #include <iostream>
 #include <stdlib.h>
 #include <string>
 #include "main.h"
+#include "Block.h"
 using namespace std;
 
 class Disk{
  //Attributes
  private:
-  int  block;
-  int  block_size;
-  char data[256][512]; 
+  int  size;
+  Block* blocks;
 
  public:
   //Default Constructor
   Disk(){
-    block = 256;
-    block_size = 512;
+    size = 256;
     //Disk storage = array of 256 block of size 512 bytes
-    //data = new char[block][block_size];
     //initialize the data array 
-    for(int i = 0; i < block; i++){
-    	for(int j = 0; j < block_size; j++){
-      	  data[i][j] = '0';
-      }
-    }
     //update bitmap to default values
+    blocks = new Block[size];
     updateBitmap(0, '1');//file alloc table
     updateBitmap(1, '1');//bitmap 
   }
   //Overloaded Constructors
   //Methods
-  void printData(){
-    for(int i = 0; i < block; i++){
+  void displayDisk(){
+    for(int i = 0; i < size; i++){
 	cout << i << endl;
-	for(int j = 0; j < block_size; j++){    
-	  if(j%32 == 0 && j != 0)
-	  	cout << endl;
-       	  cout << data[i][j];	
-	}
+       	blocks[i].display();
 	cout << endl;
     }
 
   } 
   //returns the contents of the given block number
-  char* read(int n)
+  Block* read(int n)
   {
-    if(n < 0 || n > block)
+    if(n < 0 || n > size)
        return  NULL;
-    char* temp = new char[block_size];
-    for(int j = 0; j < block_size; j++){   
-        temp[j] = data[n][j];
-     }
-    return temp; 
+    return blocks[n].readBlock(); 
   }
 
-  void write(int n, char newBlock[])
+  void write(int n, Block* newBlock)
   {
-     if(n > 256 || n < 0)
+    if(n < 0 || n > size)
         return;
-     for(int j = 0; j < block_size; j++){   
-        data[n][j] =  newBlock[j];
-     }
+     blocks[n].writeBlock(newBlock);
      updateBitmap(n, '1');//mark this block as full
   }
   //Given a number, it displays the corresponding block 
-  void printBitmap(){
-     for(int j = 0; j < block; j++){    
+  void displayBitmap(){
+     for(int j = 0; j < size; j++){    
 	  if(j%32 == 0 && j != 0)
 	  	cout << endl;
-       	  cout << data[1][j];	
+       	  cout << blocks[1].getcAt(j);	
 	}
 	cout << endl;
   }
-  void printFileAllocTable(){
-     cout << "FileName\tStartBlock\tLength" << endl;
-     for(int j = 0; j < block; j++){      
-     	for(int i = 0; i < 8; i++, j++)
-       	  cout << data[0][j];
-	cout << "\t" << data[0][j+1] << "\t\t" << data[0][j+2] << endl; 
-	j+=2;
+  void displayFileAllocTable(){
+     char c1, c2;
+     cout << "FileName\t\tStartBlock\tLength" << endl;
+     for(int j = 0; j < 512; j++){      
+     	for(int i = 0; i < 18; i++ ){
+       	   cout << blocks[0].getcAt(j);
+	   j++;
+	}
+	c1 = blocks[0].getcAt(j);
+	c2 = blocks[0].getcAt(j+1);
+	if( c2 == '0')
+	   c1 = c2 = 0;
+	printf( "\t%d\t\t%d\n", c1 , c2 ); 
+	j++;
      }
      cout << endl;
   }
-  void displayFile(){
-     
+  void displayBlock(int n ){
+     if(n > size || n < 0)
+        return;
+     blocks[n].display();
+ 
   }
   void updateBitmap(int n, char c){
-     if(n > 256 || n < 0)
+     if(n > size || n < 0)
         return;
-     data[1][n] = c; 
+     blocks[1].putcAt(n, c);
   }
-  void displayBlock(int n){
-     cout <<"Block: " <<  n << endl;
-     for(int j = 0; j < block_size; j++){    
-        if(j%32 == 0 && j != 0)
-	  cout << endl;
-       	cout << data[n][j];	
-     }
-     cout << endl;
+
+  Block* getBlock(int n){
+     if(n > size || n < 0)
+        return NULL;
+     return &blocks[n];
   }
 };
 #endif 

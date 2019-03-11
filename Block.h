@@ -13,7 +13,6 @@
 #include <stdlib.h>
 #include <string>
 #include "main.h"
-#endif
 using namespace std;
 
 class Block{
@@ -36,7 +35,7 @@ class Block{
   }
   
   //Methods
-  Block* read()
+  Block* readBlock()
   {
     Block* temp = new Block(); 
     for(int j = 0; j < block_size; j++){   
@@ -45,7 +44,7 @@ class Block{
     return temp; 
   }
 
-  void write(Block* newBlock)
+  void writeBlock(Block* newBlock)
   {
      for(int j = 0; j < 512; j++){   
         data[j] =  newBlock->data[j];
@@ -95,3 +94,4 @@ class Block{
     data[n] = c;  
   }
 }; 
+#endif

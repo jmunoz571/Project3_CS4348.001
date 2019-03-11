@@ -8,7 +8,7 @@
 
 # Set up info for C++ implicit rule
 CXX = g++
-CXXFLAGS = 
+CXXFLAGS = -Wno-unused-value
 CPPFLAGS = -Wall 
 #
 # Set up any Linker Flags
@@ -21,7 +21,7 @@ PROJECTNAME = CS4348.Project3
 
 #
 # We choose the source files to include and name the output
-SRCS = main.cc Disk.cc
+SRCS = main.cc Disk.cc Block.cc
 
 #
 # We choose the name of the executable to be created
