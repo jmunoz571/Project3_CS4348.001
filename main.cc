@@ -60,6 +60,13 @@ int main(int argc, char *argv[])
     //temporarily file variables
     FILE *inputFile;
     string fileName = ""; 
+   //test
+    Block b;
+    for(int i = 0; i < 256; i++){
+    b.putcAt(i, 'X');
+}
+    disk.write(5, &b);   
+
     //display mode
     cout << "Mode: " << modes[mode] << endl;
 //--USER Menu--------------------------------------------------------------------------------------------------
@@ -333,12 +340,16 @@ int findNextFreeBlock(Disk &disk, int &totalFreeBlocks, char fileSize){
    bool flag = true;
    //used to return 1.- the closest free block set that matches the given size, 2.- the beggining of the largest set of free blocks, 3.- its size
    int closest = 0;
+   totalFreeBlocks = 0;
+   for(int i =0; i< 256; i++){
+      c = disk.getBlock(1)->getcAt(i);
+      if(c =='0') totalFreeBlocks++;
+   }
    //traverse top-down the bitmap to find the nearest free block 
    for(int i = 0; i < 256; i++){
       c = disk.getBlock(1)->getcAt(i);
       if( c == '0')
       {
-        totalFreeBlocks+= 1; 
 	closest = i; //starting point
 	 for(int j = i + 1; j < (fileSize + i); j++)
          { 
